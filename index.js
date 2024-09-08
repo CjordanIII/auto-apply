@@ -8,6 +8,7 @@ async function main() {
     slowMo: 350,
   });
 
+  const jobtitle = "software developer";
   // Create a new Playwright context to isolate browsing session
   const context = await browser.newContext();
   // Open a new page/tab within the context
@@ -22,7 +23,7 @@ async function main() {
   // get search bar
   const searchBar = "#text-input-what";
 
-  await page.fill(searchBar, "software developer");
+  await page.fill(searchBar, jobtitle);
 
   await page.press(searchBar, "Enter");
 
@@ -31,12 +32,17 @@ async function main() {
   const div = page.locator("[id=mosaic-provider-jobcards]");
 
   const itterater = await div.evaluate(() => {
+    // jobs data arr
     const arr = [];
+    // sort divs of jobs and get only easy apply and the name
     Array.from(document.getElementsByClassName("slider_container")).map((a) => {
+      // todo recursion
       if (a.innerHTML.includes("Easily apply")) {
+        // if the div have easy apply then get the link and job title
         const joblink = a.querySelector("a[href]");
-        const jobTitle = a.querySelector("h2,h3");
 
+        const jobTitle = a.querySelector("h2,h3");
+        // if theses exest add them to the array
         if (joblink && jobTitle) {
           arr.push({ jobname: jobTitle.innerText.trim(), link: joblink.href });
         }
