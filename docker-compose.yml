@@ -1,0 +1,63 @@
+# docker-compose.yml
+
+version: "3.8"
+# db
+services:
+  # config name
+  mongo:
+    # image use for config (version)
+    image: mongo:5.0
+    # name of the container when the container spins up
+    container_name: mongo
+    #  in the enviormenet varable (will use .env later) you need (the default user name and password)
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    # what port the db is exposed on (do not connet with browsers ) does nothing
+    ports:
+      - "27017:27017"
+      # cheks to see if the db is up in running runs a ping command insdie container to see if its up and running
+    healthcheck:
+      test: "echo 'db.runCommand({ping:1})' | mongo localhost:27017"
+      # if fails runs in a interval of 1 min and 30s with a timeout of 30s and restarts up to 5 times ect...
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    # where the data from teh images is stord on the computer
+    volumes:
+      - ./database/db:/data/db
+
+      - ./database/dev.archive:/Databases/dev.archive
+
+      - ./database/production:/Databases/production
+
+
+  # mongo ui pannel (to see what is in the db)
+  # config name 
+  mongo-express:
+    # image that will be used for this config in this case mongo-expressd
+    image: mongo-express
+    #  name of the container being spun up
+    container_name: mexpress
+    #  envroment vars (will use .env later) the password and username for the db , the db link, the email and password to login to the ui
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
+
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=password
+
+      - ME_CONFIG_MONGODB_URL=mongodb://root:password@mongo:27017/?authSource=admin
+
+      - ME_CONFIG_BASICAUTH_USERNAME=mexpress
+
+      - ME_CONFIG_BASICAUTH_PASSWORD=mexpress
+    #  makes sure the the mongo db is up before this starts
+    depends_on:
+      mongo:
+        condition: service_healthy
+    # keeps restarting if failded untill it does not
+    restart: unless-stopped
+    # runs on mapped port
+    ports:
+      - "8081:8081"
