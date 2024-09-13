@@ -8,7 +8,7 @@ services:
     # image use for config (version)
     image: mongo:5.0
     # name of the container when the container spins up
-    container_name: mongo
+    container_name: mongo-autoapply
     #  in the enviormenet varable (will use .env later) you need (the default user name and password)
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
@@ -40,7 +40,7 @@ services:
     # image that will be used for this config in this case mongo-expressd
     image: mongo-express
     #  name of the container being spun up
-    container_name: mexpress
+    container_name: mexpress-autoapply
     #  envroment vars (will use .env later) the password and username for the db , the db link, the email and password to login to the ui
     environment:
       - ME_CONFIG_MONGODB_ADMINUSERNAME=root

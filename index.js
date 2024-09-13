@@ -1,23 +1,34 @@
+import dotenv from "dotenv";
 import express from "express";
-import { chromium } from "playwright";
+import { chromium } from "playwright-extra";
+import stealth from "puppeteer-extra-plugin-stealth";
 import connectDB from "./db/connectTodb.js";
 import User from "./db/models/User.js";
+
+dotenv.config({ path: "../.env" });
+
 const app = express();
+chromium.use(stealth());
+const password = process.env.BRIGHT_DATA_PASSWORD;
+const username = process.env.BIRGHT_DATA_USER;
+const AUTH = `${username}:${password}`;
+const SBR_CDP = `wss://${AUTH}@brd.superproxy.io:9222`;
 
 async function main(jobtitle) {
   // Launch a new instance of a Chromium browser with headless mode
   // disabled for visibility
-  const browser = await chromium.launch({
-    headless: false,
-    slowMo: 350,
-  });
+  console.log("connecting to browser");
+  const browser = await chromium.connectOverCDP(SBR_CDP);
 
   // Create a new Playwright context to isolate browsing session
+  console.log("opening up browser");
   const context = await browser.newContext();
   // Open a new page/tab within the context
+  console.log("creating new page");
   const page = await context.newPage();
 
   // Navigate to the GitHub topics homepage
+  console.log("going to indeed");
   await page.goto("https://www.indeed.com/");
 
   // Wait for 1 second to ensure page content loads properly
@@ -25,7 +36,7 @@ async function main(jobtitle) {
 
   // get search bar
   const searchBar = "#text-input-what";
-
+  console.log("searching for job");
   await page.fill(searchBar, jobtitle);
 
   await page.press(searchBar, "Enter");
@@ -37,7 +48,8 @@ async function main(jobtitle) {
   // next page
   let hasNexPage = true;
   let count = 0;
-  while (hasNexPage && count < 5) {
+  console.log("adding stuff to stack");
+  while (hasNexPage && count < 1000000) {
     await getLinks(div);
     const nextPage = page.getByTestId(nextPageBtn);
     const isDisabled = await nextPage.evaluate((btn) => btn.disabled);
@@ -45,14 +57,14 @@ async function main(jobtitle) {
       hasNexPage = false;
     } else {
       await nextPage.click();
+      console.log(count);
       await page.waitForLoadState("domcontentloaded");
+      count++;
     }
-    console.log(count);
-    count++;
   }
-
-  //   await browser.close();
 }
+
+//   await browser.close();
 
 const getLinks = async (div) => {
   const jobs = await div.evaluate(() => {
@@ -84,7 +96,7 @@ const getLinks = async (div) => {
     });
     return arr;
   });
-  console.log(jobs);
+  console.log("add jobs to db");
   for (let job of jobs) {
     try {
       const newUser = new User({
@@ -98,7 +110,6 @@ const getLinks = async (div) => {
       console.log(error);
     }
   }
-  // Convert the results to JSON and save to a file
 };
 // Execute the main function
 try {
