@@ -2,8 +2,8 @@ import dotenv from "dotenv";
 import express from "express";
 import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
-import connectDB from "./db/connectTodb.js";
-import User from "./db/models/User.js";
+import connectDB from "../db/connectTodb.js";
+import User from "../db/models/User.js";
 
 dotenv.config({ path: "../.env" });
 
@@ -62,9 +62,8 @@ async function main(jobtitle) {
       count++;
     }
   }
+  await browser.close();
 }
-
-//   await browser.close();
 
 const getLinks = async (div) => {
   const jobs = await div.evaluate(() => {
