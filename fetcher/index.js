@@ -9,10 +9,8 @@ dotenv.config({ path: "../.env" });
 
 const app = express();
 chromium.use(stealth());
-const password = process.env.BRIGHT_DATA_PASSWORD;
-const username = process.env.BIRGHT_DATA_USER;
-const AUTH = `${username}:${password}`;
-const SBR_CDP = `wss://${AUTH}@brd.superproxy.io:9222`;
+
+const SBR_CDP = process.env.BRIGHT_DATA_LINK;
 
 async function main(jobtitle) {
   // Launch a new instance of a Chromium browser with headless mode
