@@ -3,14 +3,14 @@ import express from "express";
 import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
 import connectDB from "../db/connectTodb.js";
-import User from "../db/models/User.js";
+import Jobs from "../db/models/Jobs.js";
 
-dotenv.config({ path: "../.env" });
+dotenv.config({path:"../../auto-apply/.env"});
 
 const app = express();
 chromium.use(stealth());
 
-const SBR_CDP = process.env.BRIGHT_DATA_LINK;
+const SBR_CDP = `${process.env.BRIGHT_DATA_LINK}`;
 
 async function main(jobtitle) {
   // Launch a new instance of a Chromium browser with headless mode
@@ -96,14 +96,15 @@ const getLinks = async (div) => {
   console.log("add jobs to db");
   for (let job of jobs) {
     try {
-      const newUser = new User({
+      const newjob = new Jobs({
         jobname: job.jobname,
         link: job.link,
       });
 
-      await newUser.save();
+      await newjob.save();
       console.log(`Saved job: ${job.jobname}`);
     } catch (error) {
+       
       console.log(error);
     }
   }
@@ -114,5 +115,6 @@ try {
   app.listen(3000, () => console.log("server running on port 3000"));
   main("software developer");
 } catch (error) {
+
   console.log(error);
 }

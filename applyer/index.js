@@ -3,15 +3,13 @@ import express from "express";
 import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
 import connectDB from "../db/connectTodb.js";
-import User from "../db/models/User.js";
+import Jobs from "../db/models/Jobs.js";
 dotenv.config({ path: "../.env" });
 
 const app = express();
 chromium.use(stealth());
-const password = process.env.BRIGHT_DATA_PASSWORD;
-const username = process.env.BIRGHT_DATA_USER;
-const AUTH = `${username}:${password}`;
-const SBR_CDP = `wss://${AUTH}@brd.superproxy.io:9222`;
+
+const SBR_CDP = `${process.env.BRIGHT_DATA_LINK}`;
 
 async function main() {
   // Launch a new instance of a Chromium browser with headless mode
@@ -25,9 +23,33 @@ async function main() {
   // Open a new page/tab within the context
   console.log("creating new page");
 
-  const jobsData = await User.find({});
+  const jobsData = await Jobs.find({});
   const page = await context.newPage();
-  console.log(jobsData);
+  // using for of loop because forEach would act up
+  for(const item of jobsData ){
+    console.log("creating screeshot")
+try {
+      await page.goto(item.link);
+      console.log("hold one.....")
+       await page.waitForTimeout(1000);
+       console.log("waiting for dom to load")
+      await page.waitForLoadState("domcontentloaded");
+     
+    await page.click("[id='indeedApplyButton']");
+       await page.screenshot({
+         path: `./page_screenshots/sucess/result_${item.jobname}.png`,
+         fullPage: true,
+       });
+       console.log("screen shot of " + item.jobname + "successful");
+} catch (error) {
+    await page.screenshot({
+      path: `./page_screenshots/errors/result.png`,
+      fullPage: true,
+    });
+  console.log("screenshot failded ",error)
+}
+    
+  }
   // add data loop
   // add diffrent functions
   await browser.close();
